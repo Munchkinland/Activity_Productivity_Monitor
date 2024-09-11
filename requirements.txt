@@ -4,6 +4,6 @@ plyer
 matplotlib
 json
 time
-win10toast
+libgl1-mesa-glx
 
 # Ante error: ERROR: No matching distribution found for time, eliminar dependencia de requirements.txt, esta dependencia ya está embebida en Python
