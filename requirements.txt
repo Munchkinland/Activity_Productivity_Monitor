@@ -2,8 +2,8 @@ opencv-python
 psutil
 plyer
 matplotlib
-json
-time
-libgl1-mesa-glx
+#json
+#time
+#libgl1-mesa-glx
 
 # Ante error: ERROR: No matching distribution found for time, eliminar dependencia de requirements.txt, esta dependencia ya está embebida en Python
