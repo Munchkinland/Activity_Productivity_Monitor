@@ -1,7 +1,7 @@
 {
-    "alert_time": 3600,
+    "alert_time": 300,
     "apps_to_track": ["code", "chrome", "word", "excel"],
     "non_productive_apps": ["netflix", "youtube", "steam"],
     "track_time": 7200,
-    "report_frequency": 86400  # Generar un reporte cada 24 horas
+    "report_frequency": 300
 }

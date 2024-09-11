@@ -1,4 +1,3 @@
-#Camera
 import cv2
 import time
 import numpy as np
@@ -11,65 +10,74 @@ class ActivityMonitor:
         :param alert_time: Tiempo en segundos antes de enviar una alerta por inactividad
         :param movement_threshold: Umbral mínimo de área para considerar que hay movimiento
         """
-        self.alert_time = alert_time  # Tiempo antes de enviar una alerta
-        self.last_movement_time = time.time()  # Última vez que se detectó movimiento
-        self.movement_detected_flag = False  # Bandera para saber si hay movimiento reciente
-        self.movement_threshold = movement_threshold  # Umbral para considerar que hay movimiento
+        self.alert_time = alert_time
+        self.last_movement_time = time.time()
+        self.movement_detected_flag = False
+        self.movement_threshold = movement_threshold
+        self.cap = None
 
     def detect_movement(self):
         """
         Detecta movimiento comparando fotogramas consecutivos de la cámara.
         Muestra el video en tiempo real con un rectángulo alrededor del área con movimiento detectado.
         """
-        cap = cv2.VideoCapture(0)  # Iniciar la cámara
+        print("Iniciando la cámara...")
+        self.cap = cv2.VideoCapture(0)
 
-        # Verificar si la cámara se abrió correctamente
-        if not cap.isOpened():
+        if not self.cap.isOpened():
             print("Error: No se pudo abrir la cámara.")
             return
 
-        ret, frame1 = cap.read()  # Primer fotograma de referencia
-        ret, frame2 = cap.read()  # Segundo fotograma para comparar
+        print("Cámara abierta. Capturando primer fotograma...")
+        ret, frame1 = self.cap.read()
+        if not ret:
+            print("Error: No se pudo capturar el primer fotograma.")
+            self.cap.release()
+            return
+
+        print("Capturando segundo fotograma...")
+        ret, frame2 = self.cap.read()
+        if not ret:
+            print("Error: No se pudo capturar el segundo fotograma.")
+            self.cap.release()
+            return
 
         while True:
-            # Diferencia entre los dos fotogramas consecutivos
             diff = cv2.absdiff(frame1, frame2)
-            gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)  # Convertir a escala de grises
-            blur = cv2.GaussianBlur(gray, (5, 5), 0)  # Aplicar desenfoque
-            _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)  # Umbral para identificar áreas en movimiento
-            dilated = cv2.dilate(thresh, None, iterations=3)  # Dilatación para cerrar huecos en los contornos
+            gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+            blur = cv2.GaussianBlur(gray, (5, 5), 0)
+            _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)
+            dilated = cv2.dilate(thresh, None, iterations=3)
             contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
             movement_detected = False
-
-            # Recorrer todos los contornos detectados
             for contour in contours:
                 if cv2.contourArea(contour) < self.movement_threshold:
-                    continue  # Ignorar pequeños movimientos (ruido)
+                    continue
                 movement_detected = True
-                self.last_movement_time = time.time()  # Actualizar el tiempo de movimiento detectado
-                self.movement_detected_flag = True  # Indicar que se detectó movimiento
-                
-                # Dibujar un rectángulo alrededor del área con movimiento
+                self.last_movement_time = time.time()
+                self.movement_detected_flag = True
+
                 (x, y, w, h) = cv2.boundingRect(contour)
                 cv2.rectangle(frame1, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-            # Mostrar el video con el rectángulo alrededor del movimiento detectado
             cv2.imshow("Activity Monitor", frame1)
 
-            # Actualizar los fotogramas para continuar con la comparación
             frame1 = frame2
-            ret, frame2 = cap.read()
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            ret, frame2 = self.cap.read()
+            if not ret:
+                print("Error: No se pudo capturar un fotograma durante la detección.")
                 break
 
-            # Si ha pasado demasiado tiempo sin detectar movimiento, reiniciar la bandera de detección
-            if time.time() - self.last_movement_time > self.alert_time:
-                self.movement_detected_flag = False  # Indicar que no hay movimiento reciente
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                print("Se presionó 'q'. Cerrando...")
+                break
 
-        cap.release()  # Liberar la cámara al finalizar
-        cv2.destroyAllWindows()  # Cerrar todas las ventanas abiertas por OpenCV
+            if time.time() - self.last_movement_time > self.alert_time:
+                print("No se ha detectado movimiento durante el tiempo de alerta. Reiniciando bandera de detección.")
+                self.movement_detected_flag = False
+
+        self.stop_camera()
 
     def movement_detected(self):
         """
@@ -83,5 +91,8 @@ class ActivityMonitor:
         """
         Libera la cámara y cierra las ventanas de OpenCV si fuera necesario.
         """
-        self.cap.release()
+        if self.cap is not None:
+            print("Liberando la cámara...")
+            self.cap.release()
         cv2.destroyAllWindows()
+        print("Todas las ventanas han sido cerradas.")

@@ -60,3 +60,11 @@ if cv2.waitKey(1) & 0xFF == ord('q'):
     break
 
 Con esto, el código seguirá ejecutándose en segundo plano y detectando movimiento, pero sin mostrar la ventana de video.
+
+{
+    "alert_time": 300,  # Tiempo en segundos antes de enviar una alerta por inactividad (5 minutos)
+    "apps_to_track": ["code", "chrome", "word", "excel"],
+    "non_productive_apps": ["netflix", "youtube", "steam"],
+    "track_time": 7200,  # Tiempo durante el cual se realiza el seguimiento de la actividad
+    "report_frequency": 300  # Intervalo para generar un reporte (5 minutos)
+}
